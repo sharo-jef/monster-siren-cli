@@ -1,9 +1,11 @@
 {
-  "name": "node-template",
-  "version": "1.0.0",
-  "description": "node template",
+  "name": "monster-siren-cli",
+  "version": "0.0.1",
+  "description": "Unofficial CLI tool for Monster Siren OST.",
   "main": "index.js",
-  "bin": "index.js",
+  "bin": {
+    "monster-siren": "./index.js"
+  },
   "scripts": {
     "start": "node -r dotenv/config .",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
