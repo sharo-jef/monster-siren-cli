@@ -2,6 +2,8 @@
 /* eslint-disable no-unused-expressions */
 /* eslint-disable no-shadow */
 
+import { createWriteStream } from 'fs';
+
 import axios from 'axios';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
@@ -60,7 +62,6 @@ yargs(hideBin(process.argv))
   .command(
     'song',
     'Song features',
-
     yargs => yargs
       .demandCommand()
       .command(
@@ -80,6 +81,30 @@ yargs(hideBin(process.argv))
             description: 'Song id',
           }),
         argv => api.get(`/song/${argv.id}`).then(data => print(data.data.data, argv.pretty)),
+      )
+      .command(
+        'download',
+        'Download song by id',
+        yargs => yargs
+          .option('id', {
+            alias: 'i',
+            type: 'number',
+            demandOption: true,
+            description: 'Song id',
+          })
+          .option('output', {
+            alias: 'o',
+            type: 'string',
+            description: 'Output file',
+          }),
+        async argv => {
+          const { sourceUrl, name } = await api.get(`/song/${argv.id}`).then(data => data.data.data);
+          if (!sourceUrl) {
+            throw new Error(`Invalid song id: ${argv.id}`);
+          }
+          const { data } = await axios.get(sourceUrl, { responseType: 'stream' });
+          data.pipe(createWriteStream(argv.output || `${name}.${sourceUrl.split('.').pop()}`));
+        },
       ),
   )
   .argv;
