@@ -36,7 +36,7 @@ yargs(hideBin(process.argv))
         'list',
         'List all albums',
         yargs => yargs,
-        argv => api.get('/albums').then(data => print(data.data.data, argv)),
+        argv => api.get('/albums').then(data => print(data.data.data, argv.pretty)),
       )
       .command(
         'get',
@@ -67,7 +67,7 @@ yargs(hideBin(process.argv))
         'list',
         'List all songs',
         yargs => yargs,
-        argv => api.get('/songs').then(data => print(data.data.data.list, argv)),
+        argv => api.get('/songs').then(data => print(data.data.data.list, argv.pretty)),
       )
       .command(
         'get',
