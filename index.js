@@ -3,6 +3,7 @@
 /* eslint-disable no-shadow */
 
 import { createWriteStream } from 'fs';
+import { mkdir } from 'fs/promises';
 
 import axios from 'axios';
 import yargs from 'yargs';
@@ -57,6 +58,38 @@ yargs(hideBin(process.argv))
           }),
         argv => (argv.detail ? api.get(`/album/${argv.id}/detail`) : api.get(`/album/${argv.id}/data`))
           .then(data => print(data.data.data, argv.pretty)),
+      )
+      .command(
+        'download',
+        'Download album by id',
+        yargs => yargs
+          .option('id', {
+            alias: 'i',
+            type: 'number',
+            demandOption: true,
+            description: 'Album id',
+          })
+          .option('output', {
+            alias: 'o',
+            type: 'string',
+            description: 'Output directory',
+          }),
+        async argv => {
+          const { name, songs } = await api.get(`/album/${argv.id}/detail`).then(data => data.data.data);
+          if (!name || !songs || songs.length === 0) {
+            throw new Error(`Invalid album id: ${argv.id}`);
+          }
+          const directory = argv.output || name;
+          await mkdir(directory, { recursive: true });
+          for (const song of songs) {
+            const { sourceUrl } = await api.get(`/song/${song.cid}`).then(data => data.data.data);
+            if (!sourceUrl) {
+              throw new Error(`Invalid song id: ${song.cid}`);
+            }
+            const { data } = await axios.get(sourceUrl, { responseType: 'stream' });
+            data.pipe(createWriteStream(`${directory}/${song.name}.${sourceUrl.split('.').pop()}`));
+          }
+        },
       ),
   )
   .command(
